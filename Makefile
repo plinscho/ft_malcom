@@ -11,7 +11,7 @@ OBJ_PATH = $(SRC_PATH)/obj
 LIB_PATH = ./inc/libft
 LIB_LINK= -L$(LIB_PATH) -lft
 
-SRC_NAMES = main.c parser.c error.c
+SRC_NAMES = main.c parser.c error.c ip.c
 OBJ_NAMES = $(SRC_NAMES:.c=.o)
 SRCS = $(addprefix $(SRC_PATH)/, $(SRC_NAMES))
 OBJS = $(addprefix $(OBJ_PATH)/, $(OBJ_NAMES))

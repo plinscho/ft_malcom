@@ -47,10 +47,17 @@ typedef struct s_malcom{
 // FUNCTIONS
 
 // error.c
-int error_print(const char *msg, int error_num);
+int error_msg(const char *msg, int err);
+int error_print(int error_num);
+int error_usage(int ret_val);
+
 
 // parser.c
-int parse_args(int argc, const char *argv[], t_malcom *data);
+int	parse_args(int argc, const char *argv[], t_malcom *data);
 
+// ip.c
+int	is_ip(const char *s);
+int	is_valid_mac(const char *s);
+void	store_ip(t_sockaddr_in *addr, const char *ip);
 
 #endif
