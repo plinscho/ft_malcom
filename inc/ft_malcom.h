@@ -34,13 +34,14 @@ typedef struct sockaddr_ll t_sockaddr_ll;
 typedef struct s_eth{
 	t_sockaddr_in	host_sockaddr_in;// man sockaddr_in / Ipv4 socket address
 	t_sockaddr_ll	host_sockaddr_ll;// man packet / physical layer address
-	char		*hostname;
-	char		*mac_addr;
+	char			*hostname;
+	char			*mac_addr;
 }t_eth;
 
 typedef struct s_malcom{
-	t_eth		src_eth;
-	t_eth		dst_eth;
+	t_eth			src_eth;
+	t_eth			dst_eth;
+	int				socketfd;
 }t_malcom;
 
 
@@ -56,8 +57,12 @@ int error_usage(int ret_val);
 int	parse_args(int argc, const char *argv[], t_malcom *data);
 
 // ip.c
-int	is_ip(const char *s);
-int	is_valid_mac(const char *s);
+int		is_ip(const char *s);
+int		is_valid_mac(const char *s);
 void	store_ip(t_sockaddr_in *addr, const char *ip);
+int create_socket(t_malcom *data);
+
+// memory.c
+void    free_malcom(t_malcom *m);
 
 #endif
