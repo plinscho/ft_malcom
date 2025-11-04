@@ -36,6 +36,11 @@ void	store_ip(t_sockaddr_in *addr, const char *new_ip){
 	inet_pton(AF_INET, new_ip, &(addr->sin_addr));
 }
 
+/*
+	This function creates a socket and binds it to ??
+
+*/
+
 int create_socket(t_malcom *data){
 	if (!data)
 		return error_msg("Error in create_socket()\nData not found.\n", 1);

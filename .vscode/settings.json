@@ -1,3 +1,8 @@
 {
-    "makefile.configureOnOpen": false
+    "makefile.configureOnOpen": false,
+    "files.associations": {
+        "if_ether.h": "c",
+        "if_packet.h": "c",
+        "in.h": "c"
+    }
 }

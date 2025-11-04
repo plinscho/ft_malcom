@@ -12,11 +12,19 @@ int parse_args(int argc, const char *argv[], t_malcom *data){
 	if (argc != 5 || check_argv(argv)){
 		return (error_usage(1));
 	}
+	
 	// copy IPv4 and IPv6 tot the data struct
 	data->src_eth.hostname = ft_strdup((char*)argv[1]);
 	data->src_eth.mac_addr = ft_strdup((char*)argv[2]);
 	data->dst_eth.hostname = ft_strdup((char*)argv[3]);
 	data->dst_eth.mac_addr = ft_strdup((char*)argv[4]);
-	return 0;
+	
+	// check for malloc error in copies
+	if (!data->src_eth.hostname ||
+		!data->src_eth.mac_addr ||
+		!data->dst_eth.hostname ||
+		!data->dst_eth.mac_addr
+	) return 1;
+	else return 0;
 }	
 

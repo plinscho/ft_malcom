@@ -1,4 +1,7 @@
 #include "ft_malcom.h"
+#include <stdbool.h>
+
+bool isOn = true;
 
 t_malcom *get_new_malcom(){
 	t_malcom *new = (t_malcom*)malloc(sizeof(t_malcom));
@@ -11,6 +14,15 @@ t_malcom *get_new_malcom(){
 	return new;
 }
 
+/*
+SUBJECT:
+When started, your program will have to wait for an ARP request sent on the broadcast
+by the target, requesting the source IP, before sending a single ARP reply to the
+target and exit. If everything went well, the arp table on the target should contain the
+associated ip and mac you provided as source.
+
+*/
+
 int main(int argc, const char *argv[]){
 	t_malcom *data = get_new_malcom();
 	if (!data)
@@ -20,6 +32,7 @@ int main(int argc, const char *argv[]){
 		return 1;
 	}
 	// ip4 and ip6 now stored in data as strings
+	// create a socket to capture the request paquet
 	if (create_socket(data)){
 		free_malcom(data);
 		return 1;
