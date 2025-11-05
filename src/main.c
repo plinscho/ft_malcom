@@ -2,13 +2,13 @@
 #include <signal.h>
 #include <stdbool.h>
 
-bool isOn = true;
+static bool isOn = true;
 
 void	signal_handler(int signum){
-	if (signum == SIGINT){
-		fprintf(stdout, "Ctrl ^C received!\n Closing server...\n");
-		isOn = false;
-	}
+	(void)signum;
+	const char msg[] = "\nCtrl-C received!\nClosing server...\n";
+	write(STDOUT_FILENO, msg, sizeof(msg) - 1);
+	isOn = false;
 }
 
 t_malcom *get_new_malcom(){
@@ -33,9 +33,18 @@ associated ip and mac you provided as source.
 
 int main(int argc, const char *argv[]){
 	struct sigaction act;
-	act.sa_handler = &signal_handler;
 	t_malcom *data = get_new_malcom();
-
+	
+	ft_memset(&act, 0, sizeof(act));
+	act.sa_handler = signal_handler;
+	if (sigaction(SIGINT, &act, NULL) == -1){
+		free_malcom(data);
+		return 1;
+	}
+	if (getuid() != 0){
+		free_malcom(data);
+		return error_msg("Error in getuid().\nRun with 'sudo ./ft_malcom'\n", 1);
+	}
 	if (!data)
 		return (error_msg("Malloc error!", 1));
 	if (parse_args(argc, argv, data)){
@@ -50,11 +59,26 @@ int main(int argc, const char *argv[]){
 	}
 
 	// We have the socket, now we have to receive the ARP request
+	//t_arp		arp_pkt;
+	uint8_t		buffer[PACKET_SIZE];
+	socklen_t	sock_len = 0;
 	while (isOn){
-		ssize_t bytes = recvfrom(data->socketfd, )
+		// recvfrom(int socket, struct sockaddr* src, socklen_t)
+		ssize_t bytes = recvfrom(data->socketfd, 
+									buffer, 
+									PACKET_SIZE, 
+									0, 
+									(struct sockaddr*)&data->src_eth,
+									&sock_len);
 
+		sigaction(SIGINT, &act, NULL);
+		if (bytes < 0 && isOn) {
+			fprintf(stderr, "Error.\nrecvfrom() failed!\n");
+			break;
+		}
+		(void)buffer;
 	}
-	printf("Success!\nExiting now.\n");
+	printf("Exiting now.\n");
 	free_malcom(data);
 	return 0;
 }

@@ -22,7 +22,9 @@
 #include <linux/if_packet.h>
 #include <netinet/if_ether.h>// struct ethhdr, ETH_P_ARP, ETH_P_IP
 #include <net/ethernet.h>// ETH_P_ALL definition
-//#include <>
+
+
+#define PACKET_SIZE 60
 
 /* TYPEDEFS */
 typedef struct sockaddr_in t_sockaddr_in;

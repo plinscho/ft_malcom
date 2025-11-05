@@ -36,18 +36,13 @@ void	store_ip(t_sockaddr_in *addr, const char *new_ip){
 	inet_pton(AF_INET, new_ip, &(addr->sin_addr));
 }
 
-/*
-	This function creates a socket and binds it to ??
-
-*/
-
 int create_socket(t_malcom *data){
 	if (!data)
 		return error_msg("Error in create_socket()\nData not found.\n", 1);
 	// This socket() function has to be run by a sudo user, or it will throw an error1
 	data->socketfd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ARP)); // man 7 raw
 	if (data->socketfd < 0)
-		return error_msg("Error creating socket\nDid you run ft_malcom with sudo?\n", 1);
+		return error_msg("Error creating raw socket\nDid you run ft_malcom with sudo?\n", 1);
 	else
 		printf("Socket created with fd: %d\n", data->socketfd);
 	return 0;
