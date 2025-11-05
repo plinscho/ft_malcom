@@ -1,7 +1,15 @@
 #include "ft_malcom.h"
+#include <signal.h>
 #include <stdbool.h>
 
 bool isOn = true;
+
+void	signal_handler(int signum){
+	if (signum == SIGINT){
+		fprintf(stdout, "Ctrl ^C received!\n Closing server...\n");
+		isOn = false;
+	}
+}
 
 t_malcom *get_new_malcom(){
 	t_malcom *new = (t_malcom*)malloc(sizeof(t_malcom));
@@ -24,7 +32,10 @@ associated ip and mac you provided as source.
 */
 
 int main(int argc, const char *argv[]){
+	struct sigaction act;
+	act.sa_handler = &signal_handler;
 	t_malcom *data = get_new_malcom();
+
 	if (!data)
 		return (error_msg("Malloc error!", 1));
 	if (parse_args(argc, argv, data)){
@@ -36,6 +47,12 @@ int main(int argc, const char *argv[]){
 	if (create_socket(data)){
 		free_malcom(data);
 		return 1;
+	}
+
+	// We have the socket, now we have to receive the ARP request
+	while (isOn){
+		ssize_t bytes = recvfrom(data->socketfd, )
+
 	}
 	printf("Success!\nExiting now.\n");
 	free_malcom(data);
