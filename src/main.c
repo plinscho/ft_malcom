@@ -2,7 +2,7 @@
 #include <signal.h>
 #include <stdbool.h>
 
-static bool isOn = true;
+static volatile bool isOn = true;
 
 void	signal_handler(int signum){
 	(void)signum;
@@ -34,6 +34,8 @@ associated ip and mac you provided as source.
 int main(int argc, const char *argv[]){
 	struct sigaction act;
 	t_malcom *data = get_new_malcom();
+	if (!data)
+		return (error_msg("Malloc error!", 1));
 	
 	ft_memset(&act, 0, sizeof(act));
 	act.sa_handler = signal_handler;
@@ -45,8 +47,6 @@ int main(int argc, const char *argv[]){
 		free_malcom(data);
 		return error_msg("Error in getuid().\nRun with 'sudo ./ft_malcom'\n", 1);
 	}
-	if (!data)
-		return (error_msg("Malloc error!", 1));
 	if (parse_args(argc, argv, data)){
 		free_malcom(data);
 		return 1;
@@ -57,30 +57,36 @@ int main(int argc, const char *argv[]){
 		free_malcom(data);
 		return 1;
 	}
+	uint16_t idx = if_nametoindex("wlp5s0");
+	printf("wlp5s0 index: %d\n\n", idx); 
 
 	// We have the socket, now we have to receive the ARP request
 	//t_arp		arp_pkt;
-	uint8_t		buffer[PACKET_SIZE];
-	socklen_t	sock_len = 0;
+	uint8_t			buffer[PACKET_SIZE];
+	socklen_t		sock_len = sizeof(data->src_eth.host_sockaddr_ll);
+	t_sockaddr_ll	*buff_eth = &data->src_eth.host_sockaddr_ll;
 	while (isOn){
+		sigaction(SIGINT, &act, NULL);
+		sock_len = sizeof(*buff_eth);
+
+		// Receive the raw bytes of the ethernet frame
 		// recvfrom(int socket, struct sockaddr* src, socklen_t)
 		ssize_t bytes = recvfrom(data->socketfd, 
 									buffer, 
 									PACKET_SIZE, 
 									0, 
-									(struct sockaddr*)&data->src_eth,
+									(struct sockaddr*)buff_eth,
 									&sock_len);
 
-		sigaction(SIGINT, &act, NULL);
 		if (bytes < 0 && isOn) {
 			fprintf(stderr, "Error.\nrecvfrom() failed!\n");
 			break;
 		}
-		(void)buffer;
+		printf("Printing Packet\n---------------------------\n");
+		print_eth_header(buff_eth);
+		sleep(1);
 	}
 	printf("Exiting now.\n");
 	free_malcom(data);
 	return 0;
 }
-
-

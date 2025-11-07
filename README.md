@@ -31,6 +31,15 @@ To start, computer A will first look at its internal list, where it will check i
 
 ________________________________________________
 
+So, what is the difference between a Ethernet Header and the information stored in a sockaddr_ll struct?
+
+Just like sockaddr_in identifies an IP address and port, sockaddr_ll indentifies a link-layer address and protocol. In the case of raw AF_PACKET sockets, the term "address" might be confusing, since we aren't really talking about IP/MAC or whatever other address, but we are talking about an interface (e.g. a physical network device) and a protocol.
+
+An Ethernet header contains metadata about the Ethernet frame, and indicates which protocol (EtherType field) is being encapsulated in the payload. A sockaddr_ll can be used to match or to identify a certain interface and protocol (fields .sll_ifindex and .sll_protocol):
+
+When a packet socket is bound to a sockaddr_ll, it will only receive packets from the specified interface (.sll_ifindex) and of the specified protocol (.sll_protocol) determined by the kernel from the EtherType field of the Ethernet header.
+When receiving (recvfrom or recvmsg), a sockaddr_ll structure, which identifies the interface on which the packet was received and the protocol, is populated by the kernel for the user.
+When sending (sendto or sendmsg), a sockaddr_ll structure is used to specify on which interface to send the packet and which protocol to set in the Ethernet header (EtherType field).
 
 
 

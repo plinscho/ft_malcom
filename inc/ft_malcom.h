@@ -10,6 +10,7 @@
 #include <stdio.h>// printf and related to printf
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>//recvfrom and sendto
 #include <errno.h>
 #include <signal.h>
@@ -18,6 +19,7 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 
+#include <net/if.h>
 #include <netinet/in.h>
 #include <linux/if_packet.h>
 #include <netinet/if_ether.h>// struct ethhdr, ETH_P_ARP, ETH_P_IP
@@ -27,8 +29,9 @@
 #define PACKET_SIZE 60
 
 /* TYPEDEFS */
-typedef struct sockaddr_in t_sockaddr_in;
-typedef struct sockaddr_ll t_sockaddr_ll;
+typedef struct ethhdr		t_ethhdr;
+typedef struct sockaddr_in	t_sockaddr_in;
+typedef struct sockaddr_ll	t_sockaddr_ll;
 
 
 /* STRUCTS */
@@ -36,6 +39,7 @@ typedef struct sockaddr_ll t_sockaddr_ll;
 /*
 
 The sockaddr_ll structure is a device-independent physical-layer address.
+(Ethernet Frames inspector)
 
     struct sockaddr_ll {
         unsigned short sll_family;    Always AF_PACKET
@@ -46,6 +50,10 @@ The sockaddr_ll structure is a device-independent physical-layer address.
         unsigned char  sll_halen;     Length of address 
         unsigned char  sll_addr[8];   Physical-layer address 
     };
+
+Keep in mind that an ethernet frame is not the same as the struct 
+sockaddr_ll (See README.md). A internet header in linux is 16 bytes
+and contains a src & dst MAC address + EtherType / Protocol (6 + 6 + 2)bytes
 
 */
 
@@ -71,6 +79,12 @@ typedef struct s_eth{
 	char			*mac_addr;
 }t_eth;
 
+typedef struct s_frame{
+	t_ethhdr		frame_header;
+	t_arp			frame_arp;
+	
+}t_frame;
+
 typedef struct s_malcom{
 	t_eth			src_eth;
 	t_eth			dst_eth;
@@ -81,13 +95,14 @@ typedef struct s_malcom{
 // FUNCTIONS
 
 // error.c
-int error_msg(const char *msg, int err);
-int error_print(int error_num);
-int error_usage(int ret_val);
+int 	error_msg(const char *msg, int err);
+int 	error_print(int error_num);
+int 	error_usage(int ret_val);
 
 
 // parser.c
-int	parse_args(int argc, const char *argv[], t_malcom *data);
+int		parse_args(int argc, const char *argv[], t_malcom *data);
+void	print_eth_header(t_sockaddr_ll *eth_frame);
 
 // ip.c
 int		is_ip(const char *s);

@@ -1,5 +1,22 @@
 #include "ft_malcom.h"
 
+void	print_eth_header(t_sockaddr_ll *eth_frame){
+	if (!eth_frame){ return ;}
+	printf("sll_family\t\t: %d\n", eth_frame->sll_family);
+	printf("sll_protocol\t\t: %d\n", eth_frame->sll_protocol);
+	printf("sll_ifindex\t\t: %d\n", eth_frame->sll_ifindex);
+	printf("sll_hatype\t\t: %d\n", eth_frame->sll_hatype);
+	printf("sll_pkttype\t\t: %d\n", eth_frame->sll_pkttype);
+	printf("sll_halen\t\t: %d\n", eth_frame->sll_halen);
+	printf("sll_addr\t\t: %02x:%02x:%02x:%02x:%02x:%02x\n\n",
+        (unsigned char)eth_frame->sll_addr[0],
+        (unsigned char)eth_frame->sll_addr[1],
+        (unsigned char)eth_frame->sll_addr[2],
+        (unsigned char)eth_frame->sll_addr[3],
+        (unsigned char)eth_frame->sll_addr[4],
+        (unsigned char)eth_frame->sll_addr[5]);
+}
+
 int check_argv(const char *argv[]){
 	if (!(is_ip(argv[1])) || !(is_ip(argv[3])))
 		return error_msg("Ipv4 not valid\n", 1);
