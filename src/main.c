@@ -61,44 +61,71 @@ int main(int argc, const char *argv[]){
 		free_malcom(data);
 		return 1;
 	}
-	uint16_t idx = if_nametoindex("enp4s0");
-	printf("enp4s0 index: %d\n\n", idx); 
+	
+	// Get default interface or use provided one
+	const char *interface = "eth0";  // Default, but you should detect this
+	uint16_t idx = if_nametoindex(interface);
+	if (idx == 0) {
+		interface = "enp4s0";  // Fallback
+		idx = if_nametoindex(interface);
+	}
+	if (idx == 0) {
+		interface = "veth0";  // For testing
+		idx = if_nametoindex(interface);
+	}
+	printf("Using interface %s (index: %d)\n\n", interface, idx);
 
 	// We have the socket, now we have to receive the ARP request
 
 	unsigned char	buffer[BUF_SIZE];
-	socklen_t		sock_len = sizeof(data->src_eth.host_sockaddr_ll);
-	t_sockaddr_ll	*buff_eth = &data->src_eth.host_sockaddr_ll;
-	t_ethhdr 		*eth_res = NULL;
-	t_arp			*arp_res = NULL;
+	struct sockaddr_ll	packet_info;  // This will contain metadata about the received packet
+	socklen_t		sock_len;
+	t_ethhdr 		*eth_header = NULL;
+	t_arp			*arp_packet = NULL;
+	
+	printf("Waiting for ARP request for IP: %s\n", data->src_eth.hostname);
+	
 	while (isOn){
 		sigaction(SIGINT, &act, NULL);
-		sock_len = sizeof(*buff_eth);
+		sock_len = sizeof(packet_info);
 
 		// Receive the raw bytes of the ethernet frame
-		// recvfrom(int socket, struct sockaddr* src, socklen_t)
-		ssize_t bytes = recvfrom(data->socketfd, buffer, BUF_SIZE, 0, (struct sockaddr*)buff_eth, &sock_len);
+		// buffer: contains the actual packet data (Ethernet header + ARP packet)
+		// packet_info: contains metadata about where the packet came from
+		ssize_t bytes = recvfrom(data->socketfd, buffer, BUF_SIZE, 0, 
+								(struct sockaddr*)&packet_info, &sock_len);
 
 		if (bytes < 0 && isOn) {
 			fprintf(stderr, "Error.\nrecvfrom() failed!\n");
 			continue;
-		} else if (bytes < (ssize_t)sizeof(t_ethhdr) + 28){
-			continue;
+		} else if (bytes < (ssize_t)sizeof(t_ethhdr) + sizeof(t_arp)){
+			continue;  // Packet too small to contain Ethernet + ARP
 		}
-		eth_res = (t_ethhdr*)buffer;
-		if (ntohs(eth_res->h_proto) != ETH_P_ARP)
+		
+		// Parse the Ethernet header from the raw packet data
+		eth_header = (t_ethhdr*)buffer;
+		if (ntohs(eth_header->h_proto) != ETH_P_ARP)
 			continue;
 		
-		arp_res = (t_arp*)(buffer + ETH2_HEADER_LEN); // start of packet + 14 bytes (Skip headers)
-		if (ntohs(arp_res->opcode) != 1) 
+		// Parse the ARP packet (starts after Ethernet header)
+		arp_packet = (t_arp*)(buffer + ETH2_HEADER_LEN);
+		if (ntohs(arp_packet->opcode) != 1)  // Only ARP requests (opcode 1)
 			continue;
-		// Found ARP request!
-		uint32_t target_ip = data->src_eth.host_sockaddr_in.sin_addr.s_addr;
-		if (target_ip == *(arp_res->tpa)){
-			printf("FOUND REQUEST BY TARGET IP\n");
+		
+		// Check if this ARP request is asking for the IP we want to spoof
+		uint32_t spoofed_ip;
+		inet_pton(AF_INET, data->src_eth.hostname, &spoofed_ip);
+		
+		if (ft_memcmp(&spoofed_ip, arp_packet->tpa, 4) == 0){
+			printf("FOUND ARP REQUEST FOR TARGET IP: %s\n", data->src_eth.hostname);
+			printf("Request came from: %d.%d.%d.%d\n", 
+				   arp_packet->spa[0], arp_packet->spa[1], 
+				   arp_packet->spa[2], arp_packet->spa[3]);
+			printf("Requesting MAC for: %d.%d.%d.%d\n",
+				   arp_packet->tpa[0], arp_packet->tpa[1],
+				   arp_packet->tpa[2], arp_packet->tpa[3]);
 			break;
 		}
-		sleep(0.2);
 	}
 	printf("Exiting now.\n");
 	free_malcom(data);

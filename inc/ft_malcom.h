@@ -106,6 +106,7 @@ int		is_ip(const char *s);
 int		is_valid_mac(const char *s);
 void	store_ip(t_sockaddr_in *addr, const char *ip);
 int 	create_socket(t_malcom *data);
+//void	print_arp_packet(t_arp *arp);  // Add this for debugging
 
 // memory.c
 void    free_malcom(t_malcom *m);

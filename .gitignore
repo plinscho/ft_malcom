@@ -1,2 +1,4 @@
 es.subject.pdf
 .vscode/
+test_setup.sh
+cleanup_test.sh
