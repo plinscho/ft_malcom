@@ -17,6 +17,42 @@ void	print_eth_header(t_sockaddr_ll *eth_frame){
         (unsigned char)eth_frame->sll_addr[5]);
 }
 
+void print_arp_packet(t_arp *arp) {
+    if (!arp) return;
+    
+    printf("=== ARP Packet ===\n");
+    printf("Hardware Type: %d\n", ntohs(arp->htype));
+    printf("Protocol Type: 0x%04x\n", ntohs(arp->ptype));
+    printf("Hardware Length: %d\n", arp->hlen);
+    printf("Protocol Length: %d\n", arp->plen);
+    printf("Opcode: %d\n", ntohs(arp->opcode));
+    
+    printf("Sender MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
+           arp->sha[0], arp->sha[1], arp->sha[2],
+           arp->sha[3], arp->sha[4], arp->sha[5]);
+    
+    printf("Target MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
+           arp->tha[0], arp->tha[1], arp->tha[2],
+           arp->tha[3], arp->tha[4], arp->tha[5]);
+    
+    printf("Sender IP: %d.%d.%d.%d\n",
+           arp->spa[0], arp->spa[1], arp->spa[2], arp->spa[3]);
+    
+    printf("Target IP: %d.%d.%d.%d\n",
+           arp->tpa[0], arp->tpa[1], arp->tpa[2], arp->tpa[3]);
+    printf("==================\n\n");
+}
+
+void print_cmp_arp(t_arp* arp_packet, const char *target){
+
+	printf("Comparing: requested IP vs our target IP\n");
+	printf("Requested: %d.%d.%d.%d\n", 
+		   arp_packet->tpa[0], arp_packet->tpa[1],
+		   arp_packet->tpa[2], arp_packet->tpa[3]);
+	printf("Our target: %s\n", target);
+
+}
+
 int check_argv(const char *argv[]){
 	if (!(is_ip(argv[1])) || !(is_ip(argv[3])))
 		return error_msg("Ipv4 not valid\n", 1);
@@ -43,5 +79,5 @@ int parse_args(int argc, const char *argv[], t_malcom *data){
 		!data->dst_eth.mac_addr
 	) return 1;
 	else return 0;
-}	
+}
 

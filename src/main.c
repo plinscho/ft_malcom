@@ -84,6 +84,9 @@ int main(int argc, const char *argv[]){
 	t_arp			*arp_packet = NULL;
 	
 	printf("Waiting for ARP request for IP: %s\n", data->src_eth.hostname);
+	printf("Will capture ARP requests on interface: %s\n", interface);
+	printf("Looking for requests asking for IP: %s\n", data->src_eth.hostname);
+	printf("Press Ctrl+C to stop...\n\n");
 	
 	while (isOn){
 		sigaction(SIGINT, &act, NULL);
@@ -98,7 +101,7 @@ int main(int argc, const char *argv[]){
 		if (bytes < 0 && isOn) {
 			fprintf(stderr, "Error.\nrecvfrom() failed!\n");
 			continue;
-		} else if (bytes < (ssize_t)sizeof(t_ethhdr) + sizeof(t_arp)){
+		} else if (bytes < (ssize_t)(sizeof(t_ethhdr) + sizeof(t_arp))){
 			continue;  // Packet too small to contain Ethernet + ARP
 		}
 		
@@ -112,19 +115,39 @@ int main(int argc, const char *argv[]){
 		if (ntohs(arp_packet->opcode) != 1)  // Only ARP requests (opcode 1)
 			continue;
 		
+		// print_arp_packet(arp_packet);
 		// Check if this ARP request is asking for the IP we want to spoof
 		uint32_t spoofed_ip;
 		inet_pton(AF_INET, data->src_eth.hostname, &spoofed_ip);
-		
+		print_cmp_arp(arp_packet, data->src_eth.hostname);
+
 		if (ft_memcmp(&spoofed_ip, arp_packet->tpa, 4) == 0){
-			printf("FOUND ARP REQUEST FOR TARGET IP: %s\n", data->src_eth.hostname);
-			printf("Request came from: %d.%d.%d.%d\n", 
-				   arp_packet->spa[0], arp_packet->spa[1], 
-				   arp_packet->spa[2], arp_packet->spa[3]);
-			printf("Requesting MAC for: %d.%d.%d.%d\n",
-				   arp_packet->tpa[0], arp_packet->tpa[1],
-				   arp_packet->tpa[2], arp_packet->tpa[3]);
-			break;
+			// Now check if the request is coming from our intended target
+			char str_tar_mac[18];
+			macbin_to_str(str_tar_mac, arp_packet->sha);
+			
+			// For testing: bypass MAC check or make it less strict
+			printf("Received MAC: %s\n", str_tar_mac);
+			printf("Expected MAC: %s\n", data->dst_eth.mac_addr);
+			
+			// BYPASS FOR TESTING: Always accept the first matching IP
+			// if (ft_strcmp(str_tar_mac, data->dst_eth.mac_addr) == 0) {
+			if (1) {  // Temporary bypass - always true
+				printf("FOUND ARP REQUEST FROM TARGET! (MAC check bypassed for testing)\n");
+				printf("Target requesting MAC for: %s\n", data->src_eth.hostname);
+				printf("Request came from MAC: %s\n", str_tar_mac);
+				printf("Request came from IP: %d.%d.%d.%d\n", 
+					   arp_packet->spa[0], arp_packet->spa[1], 
+					   arp_packet->spa[2], arp_packet->spa[3]);
+				
+				// TODO: Send ARP reply here
+				break;
+			} else {
+				printf("IP match but wrong MAC - ignoring request from: %s\n", str_tar_mac);
+				printf("Expected MAC: %s\n", data->dst_eth.mac_addr);
+			}
+		} else {
+			printf("No match - continuing to wait...\n\n");
 		}
 	}
 	printf("Exiting now.\n");

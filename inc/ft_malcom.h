@@ -100,13 +100,15 @@ int 	error_usage(int ret_val);
 // parser.c
 int		parse_args(int argc, const char *argv[], t_malcom *data);
 void	print_eth_header(t_sockaddr_ll *eth_frame);
+void 	print_cmp_arp(t_arp* arp_packet, const char *target);
 
 // ip.c
 int		is_ip(const char *s);
 int		is_valid_mac(const char *s);
 void	store_ip(t_sockaddr_in *addr, const char *ip);
 int 	create_socket(t_malcom *data);
-//void	print_arp_packet(t_arp *arp);  // Add this for debugging
+void	print_arp_packet(t_arp *arp);  // Add this for debugging
+void	macbin_to_str(char str[18], uint8_t mac[6]);
 
 // memory.c
 void    free_malcom(t_malcom *m);

@@ -30,6 +30,13 @@ int	is_valid_mac(const char *s){
 	return 1;
 }
 
+void	macbin_to_str(char str[18], uint8_t mac[6]){  // Fix: 18, not 19
+	if (!str || !mac) return;
+	sprintf((char*)str, "%02x:%02x:%02x:%02x:%02x:%02x",
+        mac[0], mac[1], mac[2],
+        mac[3], mac[4], mac[5]);
+}
+
 // Check the address before stotage!
 void	store_ip(t_sockaddr_in *addr, const char *new_ip){
 	addr->sin_family = AF_INET;
