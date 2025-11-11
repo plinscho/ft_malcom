@@ -27,6 +27,8 @@
 
 
 #define PACKET_SIZE 60
+#define BUF_SIZE 1500
+#define ETH2_HEADER_LEN 14
 
 /* TYPEDEFS */
 typedef struct ethhdr		t_ethhdr;
@@ -53,7 +55,7 @@ The sockaddr_ll structure is a device-independent physical-layer address.
 
 Keep in mind that an ethernet frame is not the same as the struct 
 sockaddr_ll (See README.md). A internet header in linux is 16 bytes
-and contains a src & dst MAC address + EtherType / Protocol (6 + 6 + 2)bytes
+and contains a src & dst MAC address + EtherType / Protocol (6 + 6 + 2)bytes = 14 bytes (ETH2_HEADER_LEN)
 
 */
 
@@ -70,20 +72,15 @@ typedef struct s_arp{
 	uint8_t		tha[6];		// target addres 8*6 bits = 48 (ignored for request)
 	uint8_t		spa[4];		// sender protocol address (internetwork address)
 	uint8_t		tpa[4];		// target protocol address
-}t_arp;
+} __attribute__((packed)) t_arp;
 
 typedef struct s_eth{
 	t_sockaddr_in	host_sockaddr_in;// man sockaddr_in / Ipv4 socket address
 	t_sockaddr_ll	host_sockaddr_ll;// man packet / physical layer address
+	t_ethhdr		eth_header;
 	char			*hostname;
 	char			*mac_addr;
 }t_eth;
-
-typedef struct s_frame{
-	t_ethhdr		frame_header;
-	t_arp			frame_arp;
-	
-}t_frame;
 
 typedef struct s_malcom{
 	t_eth			src_eth;
